@@ -1,0 +1,36 @@
+version: '3.8'
+services:
+  eureka-server:
+    build:
+      context: ./spring-eureka-server
+    ports:
+      - "8761:8761"
+    restart: on-failure
+  api-gateway:
+    build:
+      context: ./spring-eureka-zuul
+    ports: 
+    - "8762:8762"  
+    environment:
+      #overriding spring application.properties
+      - eureka.client.serviceUrl.defaultZone=http://eureka-server:8761/eureka/
+      - keycloak-client.server-url=http://keycloak:18080/auth # use host name or ip of the host machine
+    depends_on:
+      - eureka-server
+  microservice-app:
+    build:
+      context: ./authenticate
+    ports:
+    - "8000:8000"
+    environment:
+      #overriding spring application.properties
+      - eureka.client.serviceUrl.defaultZone=http://eureka-server:8761/eureka/
+      - keycloak-client.server-url=http://keycloak:8080/auth # use host name or ip of the host machine
+    depends_on:
+      - eureka-server
+    restart: on-failure
+    
+volumes:
+    microservice-test:
+      name: microservice-test
+      driver: local      
